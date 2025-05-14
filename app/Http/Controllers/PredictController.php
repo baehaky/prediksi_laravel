@@ -46,4 +46,20 @@ class PredictController extends Controller
             return back()->withErrors(['error' => $e->getMessage()])->withInput();
         }
     }
+
+    public function evaluate()
+    {
+        try {
+            $service = new \App\Services\NaiveBayesService();
+            $result = $service->evaluateModel();
+
+            return view('evaluasi', [
+                'confusion' => $result['confusion_matrix'],
+                'accuracy' => $result['accuracy'],
+            ]);
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
+    }
+
 }

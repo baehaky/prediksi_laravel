@@ -3,7 +3,7 @@
 @section('title', 'Prediksi Harga')
 
 @section('content')
-<div class="shadow-md bg-white  rounded-lg p-6">
+<div class="shadow-md bg-white rounded-lg p-6">
 
         <h2 class="text-2xl font-bold mb-4 text-center text-gray-800">Form Prediksi Harga Barang</h2>
         

@@ -51,4 +51,60 @@ class NaiveBayesService
         return $classifier->predict($sample);
     }
 
+    public function evaluateModel()
+    {
+        $path = storage_path('app/naive_bayes_model.yml');
+
+        if (!file_exists($path)) {
+            throw new \Exception("Model belum dilatih. Jalankan trainModel() terlebih dahulu.");
+        }
+
+        $modelManager = new ModelManager();
+        $classifier = $modelManager->restoreFromFile($path);
+
+        $testProducts = Product::where('sumber_data', 'test')->get();
+
+        $trueLabels = [];
+        $predictedLabels = [];
+
+        foreach ($testProducts as $product) {
+            if (in_array($product->harga_kelas, ['Murah', 'Mahal'])) {
+                $sample = [(float) $product->modal, (float) $product->diskon];
+                $trueLabels[] = $product->harga_kelas;
+                $predicted = $classifier->predict($sample);
+                $predictedLabels[] = $predicted;
+
+                // Simpan hasil prediksi ke database
+                $product->prediksi = $predicted;
+                $product->save();
+            }
+        }
+
+        // Hitung Confusion Matrix
+        $confusion = [
+            'Murah' => ['Murah' => 0, 'Mahal' => 0],
+            'Mahal' => ['Murah' => 0, 'Mahal' => 0],
+        ];
+
+        $correct = 0;
+        $total = count($trueLabels);
+
+        for ($i = 0; $i < $total; $i++) {
+            $actual = $trueLabels[$i];
+            $predicted = $predictedLabels[$i];
+
+            $confusion[$actual][$predicted]++;
+
+            if ($actual === $predicted) {
+                $correct++;
+            }
+        }
+
+        $accuracy = $total > 0 ? $correct / $total : 0;
+
+        return [
+            'confusion_matrix' => $confusion,
+            'accuracy' => round($accuracy * 100, 2)
+        ];
+    }
 }
